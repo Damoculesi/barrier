@@ -5,6 +5,8 @@
 
 // Global variables for barrier synchronization and shared data
 extern pthread_barrier_t barrier;
+int *block_sums = nullptr;  // Declare block_sums as a global array
+                            // Array to store last element of each block
 
 // Thread function to compute local and global prefix sum
 void* compute_prefix_sum(void *a)
@@ -14,7 +16,7 @@ void* compute_prefix_sum(void *a)
     int *input_vals = args->input_vals;
     int *output_vals = args->output_vals;
     int n_vals = args->n_vals;
-    int t_id = args->t_id;  // Use t_id instead of thread_id
+    int t_id = args->t_id; 
     int n_loops = args->n_loops;
 
     // Block size for each thread
@@ -29,19 +31,17 @@ void* compute_prefix_sum(void *a)
             output_vals[i] = args->op(output_vals[i - 1], input_vals[i], n_loops);
         }
     }
-
-    // Wait for all threads to finish local computation
-    pthread_barrier_wait(&barrier);
-
-    // Step 2: Use the last element of each block to compute global prefix sums (in thread 0)
-    static int *block_sums = nullptr;
-    if (t_id == 0) {
-        block_sums = new int[n_threads];  // Array to store last element of each block
+    //let thread 0 allocate the block_sums array
+    if (t_id == 0 && block_sums == nullptr) {
+        block_sums = new int[n_threads];  
     }
 
-    // Store the last value of each block
+    // Synchronize before accessing block_sums
+    pthread_barrier_wait(&barrier);
+
+        // Step 2: 
+        // Store the last value of each block
     if (end_idx > start_idx) {
-        pthread_barrier_wait(&barrier);  // Wait until block_sums is allocated
         block_sums[t_id] = output_vals[end_idx - 1];
     }
 
@@ -70,9 +70,10 @@ void* compute_prefix_sum(void *a)
     // Wait for all threads to complete before returning
     pthread_barrier_wait(&barrier);
 
-    // Thread 0 frees the block_sums array
-    if (t_id == 0) {
+    // Thread 0 frees the block_sums array after all threads are done
+    if (t_id == 0 && block_sums != nullptr) {
         delete[] block_sums;
+        block_sums = nullptr;  // Set to null after freeing
     }
 
     return 0;
