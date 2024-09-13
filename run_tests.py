@@ -8,9 +8,9 @@ from time import sleep
 #  Feel free (a.k.a. you have to) to modify this to instrument your code
 #
 
-THREADS = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
-LOOPS = [100]
-INPUTS = ["1k.txt", "8k.txt", "16k.txt"]
+THREADS = [0, 2, 4, 8, 16, 32]
+LOOPS = [10, 100, 1000, 10000, 15000, 20000, 50000, 100000]
+INPUTS = ["1k.txt"]
 
 csvs = []
 for inp in INPUTS:

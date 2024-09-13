@@ -8,6 +8,8 @@ INPUTS = {
     "1k.txt": 1*K,
     "8k.txt": 8*K,
     "16k.txt": 16*K,
+    "2025.txt": 2025,
+    "61.txt": 61,
 }
 
 try:
