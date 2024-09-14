@@ -4,7 +4,9 @@
 #include <iostream>
 
 // Global variables for barrier synchronization and shared data
-extern pthread_barrier_t barrier;
+extern pthread_barrier_t pthreadBarrier;
+extern spin_barrier* customBarrier; 
+
 int *block_sums = nullptr;  // Declare block_sums as a global array
                             // Array to store last element of each block
 
@@ -36,8 +38,12 @@ void* compute_prefix_sum(void *a)
         block_sums = new int[n_threads];  
     }
 
-    // Synchronize before accessing block_sums
-    pthread_barrier_wait(&barrier);
+    // Synchronization - use spin barrier or pthread barrier
+    if (args->spin) {
+        customBarrier->wait();
+    } else {
+        pthread_barrier_wait(&pthreadBarrier);
+    }
 
         // Step 2: 
         // Store the last value of each block
@@ -46,7 +52,11 @@ void* compute_prefix_sum(void *a)
     }
 
     // Wait for all threads to finish storing block sums
-    pthread_barrier_wait(&barrier);
+    if (args->spin) {
+        customBarrier->wait();
+    } else {
+        pthread_barrier_wait(&pthreadBarrier);
+    }
 
     if (t_id == 0) {
         // Compute prefix sum of block sums sequentially in thread 0
@@ -56,8 +66,11 @@ void* compute_prefix_sum(void *a)
     }
 
     // Wait for all threads to finish computing global prefix sum
-    pthread_barrier_wait(&barrier);
-
+    if (args->spin) {
+        customBarrier->wait();
+    } else {
+        pthread_barrier_wait(&pthreadBarrier);
+    }
     // Step 3: Adjust each block's prefix sum using the global block sums
     if (t_id > 0) {
         // Add the prefix sum from the previous blocks to the current block
@@ -68,7 +81,11 @@ void* compute_prefix_sum(void *a)
     }
 
     // Wait for all threads to complete before returning
-    pthread_barrier_wait(&barrier);
+    if (args->spin) {
+        customBarrier->wait();
+    } else {
+        pthread_barrier_wait(&pthreadBarrier);
+    }
 
     // Thread 0 frees the block_sums array after all threads are done
     if (t_id == 0 && block_sums != nullptr) {

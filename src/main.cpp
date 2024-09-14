@@ -11,7 +11,9 @@
 
 using namespace std;
 
-pthread_barrier_t barrier;  // Global barrier declaration
+// Global barrier (can be either pthread_barrier or spin_barrier)
+pthread_barrier_t pthreadBarrier;
+spin_barrier* customBarrier;  // Pointer to a spin_barrier
 
 int main(int argc, char **argv)
 {
@@ -25,9 +27,17 @@ int main(int argc, char **argv)
         sequential = true;
     }
 
-    // Setup threads and barrier
+    //set up threads
     pthread_t *threads = sequential ? NULL : alloc_threads(opts.n_threads);
-    pthread_barrier_init(&barrier, NULL, opts.n_threads);  // Initialize barrier
+
+    //set up barrier
+    if (opts.spin) {
+        // Use custom spin barrier
+        customBarrier = new spin_barrier(opts.n_threads);  // Initialize custom spin barrier
+    } else {
+        // Use pthread barrier
+        pthread_barrier_init(&pthreadBarrier, NULL, opts.n_threads);  // Initialize pthread barrier
+    }
 
     // Setup args & read input data
     prefix_sum_args_t *ps_args = alloc_args(opts.n_threads);
@@ -73,5 +83,10 @@ int main(int argc, char **argv)
     // Free other buffers
     free(threads);
     free(ps_args);
-    pthread_barrier_destroy(&barrier);  // Destroy the barrier
+    // Destroy barriers
+    if (opts.spin) {
+        delete customBarrier;  // Destroy custom spin barrier
+    } else {
+        pthread_barrier_destroy(&pthreadBarrier);  // Destroy pthread barrier
+    }
 }
