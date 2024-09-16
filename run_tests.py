@@ -10,7 +10,7 @@ LOOPS = [10, 100, 1000, 10000, 15000, 20000, 50000, 100000]  # Different loop co
 INPUTS = ["1k.txt"]  # Input files
 
 # Flag to enable spin barrier (-s)
-USE_SPIN_BARRIER = True
+USE_SPIN_BARRIER = False
 
 csvs = []
 for inp in INPUTS:
