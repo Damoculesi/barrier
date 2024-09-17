@@ -1,32 +1,30 @@
 #include "spin_barrier.h"
 #include <iostream>
 
-// Constructor: Initialize the spinlock, the count, and the flag
+// Constructor
 spin_barrier::spin_barrier(int num_threads) : num_threads(num_threads), count(0), flag(0) {
     // Initialize the spinlock
     pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE);
 }
 
-// Destructor: Destroy the spinlock
+// Destructor
 spin_barrier::~spin_barrier() {
-    // Destroy the spinlock
     pthread_spin_destroy(&lock);
 }
 
-// Wait function that simulates a barrier
+// Wait function
 void spin_barrier::wait() {
-    pthread_spin_lock(&lock);  // Lock the spinlock
+    pthread_spin_lock(&lock);
 
-    // Increment the count of threads that have reached the barrier
     count++;
 
     // If this is the last thread to reach the barrier
     if (count == num_threads) {
-        // Reset the count for the next use of the barrier
+        // Reset the count
         count = 0;
-        // Flip the flag to let all waiting threads proceed
+        // Flip the flag
         flag = !flag;
-        pthread_spin_unlock(&lock);  // Unlock the spinlock
+        pthread_spin_unlock(&lock);
     } else {
         // Save the current value of the flag
         int current_flag = flag;
@@ -34,11 +32,10 @@ void spin_barrier::wait() {
         // Unlock the spinlock for other threads to proceed
         pthread_spin_unlock(&lock);
 
-        // Spin-wait until the flag changes, indicating all threads have reached the barrier
+        // Spin-wait
         while (flag == current_flag) {
-            // Busy-wait (spinning)
-            // Optional: You could add a small sleep or pause to reduce CPU usage
-            asm volatile("pause" ::: "memory");  // An optional pause instruction for efficient spinning
+            //maintain proper memory access ordering
+            asm volatile("pause" ::: "memory");
         }
     }
 }

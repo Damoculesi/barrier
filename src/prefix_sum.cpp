@@ -7,8 +7,7 @@
 extern pthread_barrier_t pthreadBarrier;
 extern spin_barrier* customBarrier; 
 
-int *block_sums = nullptr;  // Declare block_sums as a global array
-                            // Array to store last element of each block
+int *block_sums = nullptr;
 
 // Thread function to compute local and global prefix sum
 void* compute_prefix_sum(void *a)
@@ -21,10 +20,9 @@ void* compute_prefix_sum(void *a)
     int t_id = args->t_id; 
     int n_loops = args->n_loops;
 
-    // Block size for each thread
     int block_size = (n_vals + n_threads - 1) / n_threads; // Ceiling division
     int start_idx = t_id * block_size;
-    int end_idx = std::min(start_idx + block_size, n_vals);
+    int end_idx = std::min(start_idx + block_size, n_vals); //Prevent edge cases
 
     // Step 1: Compute local prefix sum sequentially within each block
     if (start_idx < end_idx) {
@@ -71,6 +69,7 @@ void* compute_prefix_sum(void *a)
     } else {
         pthread_barrier_wait(&pthreadBarrier);
     }
+
     // Step 3: Adjust each block's prefix sum using the global block sums
     if (t_id > 0) {
         // Add the prefix sum from the previous blocks to the current block
@@ -90,7 +89,7 @@ void* compute_prefix_sum(void *a)
     // Thread 0 frees the block_sums array after all threads are done
     if (t_id == 0 && block_sums != nullptr) {
         delete[] block_sums;
-        block_sums = nullptr;  // Set to null after freeing
+        block_sums = nullptr;
     }
 
     return 0;

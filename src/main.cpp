@@ -13,7 +13,7 @@ using namespace std;
 
 // Global barrier (can be either pthread_barrier or spin_barrier)
 pthread_barrier_t pthreadBarrier;
-spin_barrier* customBarrier;  // Pointer to a spin_barrier
+spin_barrier* customBarrier;
 
 int main(int argc, char **argv)
 {

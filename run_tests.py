@@ -5,12 +5,13 @@ import re
 from time import sleep
 
 #  Configuration parameters
-THREADS = [0, 2, 4, 8, 16, 32]  # Different numbers of threads to test
-LOOPS = [10, 100, 1000, 10000, 15000, 20000, 50000, 100000]  # Different loop counts
-INPUTS = ["1k.txt"]  # Input files
+# THREADS = [0]
+THREADS = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]  # Different numbers of threads to test
+LOOPS = [10, 100, 500, 1000, 10000]  # Different loop counts
+INPUTS = ["16k.txt"]  # Input files
 
 # Flag to enable spin barrier (-s)
-USE_SPIN_BARRIER = False
+USE_SPIN_BARRIER = True
 
 csvs = []
 for inp in INPUTS:
